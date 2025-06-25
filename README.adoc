@@ -1,6 +1,6 @@
 = CloudBees action: Scan with Gitleaks
 
-Use this action to perform static application security testing (SAST) on a repository with the Gitleaks scanner.
+Use this action to detect secrets and sensitive information in the codebase with Gitleaks, an open-source secret scanning tool.
 
 == Inputs
 
@@ -13,16 +13,15 @@ Use this action to perform static application security testing (SAST) on a repos
 | Required?
 | Description
 
-
 | `ref`
 | String
 | No
-| Specify the ref that should be checked out and archived.
+| The ref of the code to be scanned.
 
 | `workspace-dir`
 | String
 | No
-| Specify the path where the checked out code will be present for scanning.
+| The path of the code to be scanned.
 
 |===
 
@@ -34,10 +33,7 @@ In your YAML file, add:
 ----
 
       - name: Scan with Gitleaks
-        uses: https://github.com/cloudbees-io/gitleaks-plugin@v1
-        with:
-          ref: main
-
+        uses: cloudbees-io/gitleaks-plugin@v1
 ----
 
 == License
