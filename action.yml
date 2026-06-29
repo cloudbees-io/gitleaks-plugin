@@ -34,7 +34,19 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Generate sha and ref 
+    - name: Clear asset store for container scan
+      uses: docker://alpine:latest
+      shell: sh
+      run: |
+        if [ -d "$CLOUDBEES_WORKSPACE/store" ]; then
+          find $CLOUDBEES_WORKSPACE/store -mindepth 2 -maxdepth 2 \
+            -type d ! -name "discovered-profile-findings" \
+            -exec rm -rf {} +
+          rm -rf $CLOUDBEES_WORKSPACE/store/binary-assets
+          rm -rf $CLOUDBEES_WORKSPACE/store/request
+        fi
+
+    - name: Generate sha and ref
       uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-plugin-chain-utils:9c6f7dd273dfaff6d1d03ffaac6cb0261f375e73
       with:
         entrypoint: assets-plugin-chain-utils
@@ -47,7 +59,7 @@ runs:
          INPUT_REF: ${{ inputs.ref }}
          INPUT_WORKSPACE_DIR: ${{ inputs.workspace-dir }}
 
-    - name: Generate reference files 
+    - name: Generate reference files
       uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-plugin-chain-utils:9c6f7dd273dfaff6d1d03ffaac6cb0261f375e73
       with:
           entrypoint: assets-plugin-chain-utils
@@ -56,18 +68,6 @@ runs:
           INPUT_CLOUDBEES_API_TOKEN: ${{ cloudbees.api.token }}
           INPUT_CLOUDBEES_API_URL: ${{ cloudbees.api.url }}
           INPUT_RUN_ID: ${{ cloudbees.run_id }}
-
-    - name: Clear asset store for container scan
-      uses: docker://alpine:latest
-      shell: sh
-      run: |
-        if [ -d "$CLOUDBEES_WORKSPACE/store" ]; then
-          find $CLOUDBEES_WORKSPACE/store -mindepth 2 -maxdepth 2 \
-            -type d ! -name "discovered-profile-findings" \
-            -exec rm -rf {} +
-          rm -rf $CLOUDBEES_WORKSPACE/store/binary-assets
-          rm -rf $CLOUDBEES_WORKSPACE/store/request
-        fi
 
     - name: Run gitleaks compliance plugin
       uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gitleaks-scanner:ff0ca194ecb33e2eb6c5ba18c9b9a6ca905c4af0
