@@ -57,6 +57,18 @@ runs:
           INPUT_CLOUDBEES_API_URL: ${{ cloudbees.api.url }}
           INPUT_RUN_ID: ${{ cloudbees.run_id }}
 
+    - name: Clear asset store for container scan
+      uses: docker://alpine:latest
+      shell: sh
+      run: |
+        if [ -d "$CLOUDBEES_WORKSPACE/store" ]; then
+          find $CLOUDBEES_WORKSPACE/store -mindepth 2 -maxdepth 2 \
+            -type d ! -name "discovered-profile-findings" \
+            -exec rm -rf {} +
+          rm -rf $CLOUDBEES_WORKSPACE/store/binary-assets
+          rm -rf $CLOUDBEES_WORKSPACE/store/request
+        fi
+
     - name: Run gitleaks compliance plugin
       uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gitleaks-scanner:ff0ca194ecb33e2eb6c5ba18c9b9a6ca905c4af0
       continue-on-error: true
