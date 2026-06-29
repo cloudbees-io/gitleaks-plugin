@@ -27,12 +27,15 @@ outputs:
   low-count:
     description: A string containing the number of Low security findings discovered during the scan.
     value: ${{steps.process-outputs.outputs.low-count}}
+  policy-subject:
+    description: A json value containing the details about the vulnerability scan summary & details.
+    value: ${{steps.process-outputs.outputs.policy-subject}}  
 
 runs:
   using: composite
   steps:
     - name: Generate sha and ref 
-      uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-plugin-chain-utils:1f95fd45dd03fa6f363ff95cb20142fe4b7d83c4
+      uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-plugin-chain-utils:9c6f7dd273dfaff6d1d03ffaac6cb0261f375e73
       with:
         entrypoint: assets-plugin-chain-utils
         args: get-commit-info
@@ -45,7 +48,7 @@ runs:
          INPUT_WORKSPACE_DIR: ${{ inputs.workspace-dir }}
 
     - name: Generate reference files 
-      uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-plugin-chain-utils:1f95fd45dd03fa6f363ff95cb20142fe4b7d83c4
+      uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-plugin-chain-utils:9c6f7dd273dfaff6d1d03ffaac6cb0261f375e73
       with:
           entrypoint: assets-plugin-chain-utils
           args: generate-references --asset-type "CODE"
@@ -54,8 +57,21 @@ runs:
           INPUT_CLOUDBEES_API_URL: ${{ cloudbees.api.url }}
           INPUT_RUN_ID: ${{ cloudbees.run_id }}
 
+    - name: Clear asset store for container scan
+      uses: docker://alpine:latest
+      shell: sh
+      run: |
+        if [ -d "$CLOUDBEES_WORKSPACE/store" ]; then
+          find $CLOUDBEES_WORKSPACE/store -mindepth 2 -maxdepth 2 \
+            -type d ! -name "discovered-profile-findings" \
+            -exec rm -rf {} +
+          rm -rf $CLOUDBEES_WORKSPACE/store/binary-assets
+          rm -rf $CLOUDBEES_WORKSPACE/store/request
+        fi
+
     - name: Run gitleaks compliance plugin
       uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-gitleaks-scanner:ff0ca194ecb33e2eb6c5ba18c9b9a6ca905c4af0
+      continue-on-error: true
       env:
           RUN_ID: ${{ cloudbees.run_id }}
           JOB_ID: ${{ job.id }}
@@ -63,7 +79,7 @@ runs:
       run: /app/plugin-gitleaks-scanner -mode single
 
     - name: Complete execution plan
-      uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-plugin-chain-utils:1f95fd45dd03fa6f363ff95cb20142fe4b7d83c4
+      uses: docker://public.ecr.aws/l7o7z1g8/actions/assets-plugin-chain-utils:9c6f7dd273dfaff6d1d03ffaac6cb0261f375e73
       id: process-outputs
       with:
           entrypoint: assets-plugin-chain-utils
@@ -72,3 +88,4 @@ runs:
           INPUT_CLOUDBEES_API_TOKEN: ${{ cloudbees.api.token }}
           INPUT_CLOUDBEES_API_URL: ${{ cloudbees.api.url }}
           INPUT_RUN_ID: ${{ cloudbees.run_id }}
+          INPUT_WORKSPACE_DIR: ${{ inputs.workspace-dir }}
