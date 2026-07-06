@@ -56,6 +56,10 @@ You can also use the action output as a quality gate for the next step or job in
 | String
 | The number of *Low* security findings discovered during the scan.
 
+| `policy-subject`
+| JSON
+| A JSON value containing details about the vulnerability scan summary and details.
+
 |===
 
 
@@ -129,6 +133,7 @@ jobs:
             echo "High count: ${{steps.gitleaks-step.outputs.high-count}}"
             echo "Medium count: ${{steps.gitleaks-step.outputs.medium-count}}"
             echo "Low count: ${{steps.gitleaks-step.outputs.low-count}}"
+            echo "Policy subject: ${{steps.gitleaks-step.outputs.policy-subject}}"
 
 
 ----
@@ -160,6 +165,7 @@ jobs:
       gitleaks-job-output-high: ${{ steps.gitleaks-step.outputs.high-count }}
       gitleaks-job-output-medium: ${{ steps.gitleaks-step.outputs.medium-count }}
       gitleaks-job-output-low: ${{ steps.gitleaks-step.outputs.low-count }}
+      gitleaks-job-output-policy-subject: ${{ steps.gitleaks-step.outputs.policy-subject }}
     steps:
       - name: check out source code
         uses: cloudbees-io/checkout@v1
@@ -186,6 +192,7 @@ jobs:
           echo "High count: ${{ needs.job1.outputs.gitleaks-job-output-high }}"
           echo "Medium count: ${{ needs.job1.outputs.gitleaks-job-output-medium }}"
           echo "Low count: ${{ needs.job1.outputs.gitleaks-job-output-low }}"
+          echo "Policy subject: ${{ needs.job1.outputs.gitleaks-job-output-policy-subject }}"
 
 ----
 
